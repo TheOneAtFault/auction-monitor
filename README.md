@@ -1,6 +1,6 @@
-# 🎯 Auction Listener - Production Ready
+# 🎯 Auction Listener 
 
-A production-ready real-time auction monitoring system that tracks specific items on live.aucor.com and sends email notifications when matches are found.
+A real-time auction monitoring system that tracks specific items on live.****.com and sends email notifications when matches are found.
 
 ## 🚀 Features
 

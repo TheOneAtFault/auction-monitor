@@ -1,0 +1,76 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment variables
+.env
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
+
+# Development and Debug Files (NEVER ADD THESE BACK)
+check_*.py
+clear_*.py
+debug_*.py
+test_*.py
+inspect_*.py
+*_test.py
+*_debug.py
+
+# Duplicate scrapers (NEVER ADD THESE BACK)
+improved_scraper*.py
+selenium_scraper.py
+scraper.py
+js_scraper.py
+manual_check_selenium.py
+
+# Development documentation (NEVER ADD THESE BACK)
+CLEANUP_SUMMARY.md
+DYNAMIC_TERMS_CONFIRMED.md
+SCRAPER_UPDATES.md
+SYSTEM_STATUS.md
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.bak
+*.backup
+*.tmp

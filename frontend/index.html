@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aucor Auction Listener</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="container">
+                <h1 class="logo">
+                    <i class="fas fa-bell"></i>
+                    Aucor Auction Listener
+                </h1>
+                <p class="subtitle">Get notified when your desired auction items are available</p>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main">
+            <div class="container">
+                <!-- Add Listener Section -->
+                <section class="add-listener-section">
+                    <div class="card">
+                        <h2><i class="fas fa-plus-circle"></i> Add New Listener</h2>
+                        <form @submit.prevent="addListener" class="listener-form">
+                            <div class="form-group">
+                                <label for="email">
+                                    <i class="fas fa-envelope"></i>
+                                    Email Address
+                                </label>
+                                <input 
+                                    type="email" 
+                                    id="email" 
+                                    v-model="newListener.email" 
+                                    placeholder="your.email@example.com"
+                                    required
+                                    :disabled="loading"
+                                >
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="searchTerm">
+                                    <i class="fas fa-search"></i>
+                                    Search Term
+                                </label>
+                                <input 
+                                    type="text" 
+                                    id="searchTerm" 
+                                    v-model="newListener.searchTerm" 
+                                    placeholder="e.g., logitech mx master 3"
+                                    required
+                                    :disabled="loading"
+                                >
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary" :disabled="loading">
+                                <i class="fas fa-plus" v-if="!loading"></i>
+                                <i class="fas fa-spinner fa-spin" v-if="loading"></i>
+                                {{ loading ? 'Adding...' : 'Add Listener' }}
+                            </button>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- Manage Listeners Section -->
+                <section class="manage-listeners-section">
+                    <div class="card">
+                        <h2><i class="fas fa-list"></i> Manage Your Listeners</h2>
+                        
+                        <div class="search-listeners">
+                            <div class="form-group">
+                                <label for="searchEmail">
+                                    <i class="fas fa-envelope"></i>
+                                    Enter your email to view listeners
+                                </label>
+                                <div class="search-input-group">
+                                    <input 
+                                        type="email" 
+                                        id="searchEmail" 
+                                        v-model="searchEmail" 
+                                        placeholder="your.email@example.com"
+                                        @keyup.enter="loadListeners"
+                                    >
+                                    <button @click="loadListeners" class="btn btn-secondary" :disabled="!searchEmail">
+                                        <i class="fas fa-search"></i>
+                                        Search
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Listeners List -->
+                        <div v-if="listeners.length > 0" class="listeners-list">
+                            <h3>Your Active Listeners ({{ listeners.length }})</h3>
+                            <div class="listener-item" v-for="listener in listeners" :key="listener.id">
+                                <div class="listener-info">
+                                    <div class="search-term">
+                                        <i class="fas fa-search"></i>
+                                        {{ listener.search_term }}
+                                    </div>
+                                    <div class="listener-meta">
+                                        <span class="email">
+                                            <i class="fas fa-envelope"></i>
+                                            {{ listener.email }}
+                                        </span>
+                                        <span class="created-date">
+                                            <i class="fas fa-calendar"></i>
+                                            Added: {{ formatDate(listener.created_at) }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <button 
+                                    @click="deleteListener(listener.id)" 
+                                    class="btn btn-danger btn-small"
+                                    :disabled="loading"
+                                    title="Remove this listener"
+                                >
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div v-else-if="searchEmail && !loading" class="no-listeners">
+                            <i class="fas fa-inbox"></i>
+                            <p>No listeners found for this email address.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Actions Section -->
+                <section class="actions-section">
+                    <div class="card">
+                        <h2><i class="fas fa-tools"></i> Actions</h2>
+                        <div class="action-buttons">
+                            <button @click="testEmail" class="btn btn-secondary" :disabled="loading || !testEmailAddress">
+                                <i class="fas fa-paper-plane" v-if="!loading"></i>
+                                <i class="fas fa-spinner fa-spin" v-if="loading"></i>
+                                Send Test Email
+                            </button>
+                            
+                            <button @click="manualCheck" class="btn btn-secondary" :disabled="loading">
+                                <i class="fas fa-sync" v-if="!loading"></i>
+                                <i class="fas fa-spinner fa-spin" v-if="loading"></i>
+                                Manual Check
+                            </button>
+                        </div>
+                        
+                        <div class="form-group" style="margin-top: 15px;">
+                            <input 
+                                type="email" 
+                                v-model="testEmailAddress" 
+                                placeholder="Email for test message"
+                                class="test-email-input"
+                            >
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Statistics Section -->
+                <section class="stats-section" v-if="stats">
+                    <div class="card">
+                        <h2><i class="fas fa-chart-bar"></i> System Statistics</h2>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-value">{{ stats.total_listeners }}</div>
+                                <div class="stat-label">Total Listeners</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">{{ stats.unique_emails }}</div>
+                                <div class="stat-label">Unique Users</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Notifications -->
+        <div v-if="notification" :class="['notification', notification.type]">
+            <i class="fas fa-check-circle" v-if="notification.type === 'success'"></i>
+            <i class="fas fa-exclamation-triangle" v-if="notification.type === 'error'"></i>
+            <i class="fas fa-info-circle" v-if="notification.type === 'info'"></i>
+            <span>{{ notification.message }}</span>
+            <button @click="notification = null" class="notification-close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="container">
+                <p>&copy; 2025 Aucor Auction Listener. Built with Vue.js and Python Flask.</p>
+                <p class="footer-note">
+                    <i class="fas fa-info-circle"></i>
+                    The system automatically checks for new auction items every 30 minutes.
+                </p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>

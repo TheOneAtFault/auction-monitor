@@ -13,7 +13,8 @@ createApp({
             stats: null,
             loading: false,
             notification: null,
-            apiBaseUrl: 'http://localhost:5000/api'
+            // Auto-detect API URL based on environment
+            apiBaseUrl: this.detectApiUrl()
         }
     },
     
@@ -22,6 +23,20 @@ createApp({
     },
     
     methods: {
+        detectApiUrl() {
+            // Auto-detect API URL for development vs production
+            const currentHost = window.location.hostname;
+            const currentProtocol = window.location.protocol;
+            
+            if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
+                // Development mode - assume Flask is running on localhost:5000
+                return 'http://localhost:5000/api';
+            } else {
+                // Production mode - use same domain with /api path
+                return `${currentProtocol}//${currentHost}/api`;
+            }
+        },
+        
         async addListener() {
             if (!this.newListener.email || !this.newListener.searchTerm) {
                 this.showNotification('Please fill in all fields', 'error');
